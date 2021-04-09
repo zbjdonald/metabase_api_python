@@ -2,7 +2,7 @@ import requests
 import getpass
 
 
-class Metabase_API():
+class MetabaseAPI:
 
     def __init__(self, domain, email, password=None):
 
@@ -36,9 +36,7 @@ class Metabase_API():
         else:
             raise Exception(res)
 
-    ##################################################################
-    ######################### REST Methods ###########################
-    ##################################################################
+    # REST Methods
 
     def get(self, endpoint, **kwargs):
         self.validate_session()
@@ -61,10 +59,7 @@ class Metabase_API():
         res = requests.delete(self.domain + endpoint, headers=self.header, **kwargs)
         return res.status_code
 
-    ##################################################################
-    ##################### Auxiliary Functions ########################
-    ##################################################################
-
+    # Auxiliary Functions
     def get_item_name(self, item_type, item_id):
 
         assert item_type in ['card', 'table', 'dashboard', 'collection', 'pulse']
@@ -165,10 +160,10 @@ class Metabase_API():
         return tables[0]
 
     def get_db_info(self, db_name=None, db_id=None, params=None):
-        '''
+        """
         Return Database info. Use 'params' for providing arguments.
         For example to include tables in the result, use: params={'include':'tables'}
-        '''
+        """
         if params:
             assert type(params) == dict
 
@@ -193,9 +188,9 @@ class Metabase_API():
 
     def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False,
                             column_id_name=False):
-        '''Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
+        """Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
            If column_id_name is True, return a dictionary with col_id key and col_name value.
-        '''
+        """
         if not self.friendly_names_is_disabled():
             raise ValueError(
                 'Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
@@ -223,11 +218,11 @@ class Metabase_API():
                     if i['table_name'] == table_name}
 
     def friendly_names_is_disabled(self):
-        '''
+        """
         The endpoint /api/database/:db-id/fields which is used in the function get_column_name_id relies on the display name of fields.
         If "Friendly Table and Field Names" (in Admin Panel > Settings > General) is not disabled, it changes the display name of fields.
         So it is important to make sure this setting is disabled, before running the get_column_name_id function.
-        '''
+        """
         friendly_name_setting = [i['value'] for i in self.get('/api/setting') if i['key'] == 'humanization-strategy'][0]
         return friendly_name_setting == 'none'  # 'none' means disabled
 
@@ -236,10 +231,7 @@ class Metabase_API():
         if verbose:
             print(msg)
 
-    ##################################################################
-    ###################### Custom Functions ##########################
-    ##################################################################
-
+    # Custom Functions
     def create_card(self, card_name=None, collection_name=None, collection_id=None,
                     db_name=None, db_id=None, table_name=None, table_id=None,
                     column_order='db_table_order', custom_json=None, verbose=False, return_card=False):
@@ -330,7 +322,7 @@ class Metabase_API():
 
         elif column_order == 'db_table_order':  # default
 
-            ### Finding the actual order of columns in the table as they appear in the database
+            # Finding the actual order of columns in the table as they appear in the database
             # creating a temporary card for retrieving column ordering
             json_str = """{{'dataset_query': {{'database': {1},
                                     'native': {{'query': 'SELECT * from "{2}";' }},
@@ -462,7 +454,7 @@ class Metabase_API():
         postfix -- if destination_card_name is None, adds this string to the end of source_card_name
                    to make destination_card_name
         """
-        ### Making sure we have the data that we need
+        # Making sure we have the data that we need
         if not source_card_id:
             if not source_card_name:
                 raise ValueError('Either the name or id of the source card must be provided.')
@@ -520,7 +512,7 @@ class Metabase_API():
         postfix -- if destination_pulse_name is None, adds this string to the end of source_pulse_name
                    to make destination_pulse_name
         """
-        ### Making sure we have the data that we need
+        # Making sure we have the data that we need
         if not source_pulse_id:
             if not source_pulse_name:
                 raise ValueError('Either the name or id of the source pulse must be provided.')
@@ -574,7 +566,7 @@ class Metabase_API():
         postfix -- if destination_dashboard_name is None, adds this string to the end of source_dashboard_name
                    to make destination_dashboard_name
         """
-        ### Making sure we have the data that we need
+        # Making sure we have the data that we need
         if not source_dashboard_id:
             if not source_dashboard_name:
                 raise ValueError('Either the name or id of the source dashboard must be provided.')
@@ -594,12 +586,12 @@ class Metabase_API():
                 source_dashboard_name = self.get_item_name(item_type='dashboard', item_id=source_dashboard_id)
             destination_dashboard_name = source_dashboard_name + postfix
 
-        ### shallow-copy
+        # shallow-copy
         shallow_copy_json = {'collection_id': destination_collection_id, 'name': destination_dashboard_name}
         res = self.post('/api/dashboard/{}/copy'.format(source_dashboard_id), json=shallow_copy_json)
         dup_dashboard_id = res['id']
 
-        ### deepcopy
+        # deepcopy
         if deepcopy:
             # Getting the source dashboard info
             source_dashboard = self.get('/api/dashboard/{}'.format(source_dashboard_id))
@@ -667,7 +659,7 @@ class Metabase_API():
                                "[dashboard_name]'s duplicated cards" in the same path as the duplicated dashboard.
         verbose -- prints extra information (default False)
         """
-        ### Making sure we have the data that we need
+        # Making sure we have the data that we need
         if not source_collection_id:
             if not source_collection_name:
                 raise ValueError('Either the name or id of the source collection must be provided.')
@@ -688,12 +680,12 @@ class Metabase_API():
         # getting the info of the source collection
         source_collection = self.get('/api/collection/{}'.format(source_collection_id))
 
-        ### copying the items of the source collection to the new collection
+        # copying the items of the source collection to the new collection
         items = self.get('/api/collection/{}/items'.format(source_collection_id))
 
         for item in items:
 
-            ### copying a collection
+            # copying a collection
             if item['model'] == 'collection':
                 collection_id = item['id']
                 collection_name = item['name']
@@ -712,7 +704,7 @@ class Metabase_API():
                                      deepcopy_dashboards=deepcopy_dashboards,
                                      verbose=verbose)
 
-            ### copying a dashboard
+            # copying a dashboard
             if item['model'] == 'dashboard':
                 dashboard_id = item['id']
                 dashboard_name = item['name']
@@ -723,7 +715,7 @@ class Metabase_API():
                                     destination_dashboard_name=destination_dashboard_name,
                                     deepcopy=deepcopy_dashboards)
 
-            ### copying a card
+            # copying a card
             if item['model'] == 'card':
                 card_id = item['id']
                 card_name = item['name']
@@ -733,7 +725,7 @@ class Metabase_API():
                                destination_collection_id=destination_parent_collection_id,
                                destination_card_name=destination_card_name)
 
-            ### copying a pulse
+            # copying a pulse
             if item['model'] == 'pulse':
                 pulse_id = item['id']
                 pulse_name = item['name']
@@ -745,7 +737,7 @@ class Metabase_API():
 
     def move_to_archive(self, item_type, item_name=None, item_id=None,
                         collection_name=None, collection_id=None, table_id=None, verbose=False):
-        '''Archive the given item. For deleting the item use the 'delete_item' function.'''
+        """Archive the given item. For deleting the item use the 'delete_item' function."""
         assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
 
         if not item_id:
@@ -774,10 +766,10 @@ class Metabase_API():
 
     def delete_item(self, item_type, item_name=None, item_id=None,
                     collection_name=None, collection_id=None, verbose=False):
-        '''
+        """
         Delete the given item. Use carefully (this is different from archiving).
         Currently Collections and Segments cannot be deleted using the Metabase API.
-        '''
+        """
         assert item_type in ['card', 'dashboard', 'pulse']
         if not item_id:
             if not item_name:
@@ -790,11 +782,11 @@ class Metabase_API():
                       column_id=None, column_name=None,
                       table_id=None, table_name=None,
                       db_id=None, db_name=None):
-        '''
+        """
         Update the column in data model by providing values for 'params'.
         For example for changing the column type to 'Category' in data model, use: params={'special_type':'type/Category'}.
         Other parameter values: https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid
-        '''
+        """
         assert type(params) == dict
 
         # making sure we have the data we need
